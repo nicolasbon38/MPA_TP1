@@ -78,7 +78,33 @@ abline(lm(theta ~ y), col="orange")
 
 ##Question 6
 
-On trace en orange la droite de la régression linéaire et on constate qu'elle correspond à la droite de l'espérance conditionelle.
+On trace en orange la droite de la régression linéaire et on constate qu'elle correspond à la droite de l'espérance conditionelle.(voir graphique précédent)
+
+##Question 7 
+
+On réutilise le code précédent avec 100000 tirages, puis on élimine les valeurs qui ne correspondent pas à l'intervalle.
+
+
+```{R}
+  
+taille <- 100000
+
+#On tire les thetas 
+theta <- rnorm(taille, 0, sqrt(32)) #je ne sais pas si il veut la variance ou l'ecart-type
+
+#on tire les y sachant theta
+
+y <- rnorm(taille, theta/4, sqrt(2))
+ytheta <- data.frame(theta, y)
+ytheta = ytheta[ytheta[,2] < 2.01 & ytheta[,2] > 1.99,]
+
+```
+
+#Question 8
+Voici l'histogramme pour theta avec y dans l'intervalle.
+```{R}
+hist(ytheta[,1], main = 'histogramme de theta', xlab = 'theta')
+```
 
 
 
