@@ -11,7 +11,7 @@ On constate que la loi $p(y, \theta)$ se factorise en deux lois normales, dont u
 
 $p(y, \theta) \propto exp(-\frac{1}{4}[(y - \frac{\theta}{4})^2) + \frac{\theta^2}{16}) \propto exp(-\frac{1}{4}(y - \frac{\theta}{4})^2) \times exp(-\frac{\theta^2}{64})$
 
-On reconnaît les lois $p(y|\theta) = \mathcal{N}(\frac{\theta}{2}; 2)$ et $p(\theta) = \mathcal{N}(0; 32)$
+On reconnaît les lois $p(y|\theta) = \mathcal{N}(\frac{\theta}{4}; 2)$ et $p(\theta) = \mathcal{N}(0; 32)$
 
 On identifie alors les constantes de normalisations grâce à la formule de la loi normale, qui valent respectivement $c_1 = \frac{1}{2\sqrt{\pi}}$ et $c_2 = \frac{1}{8\sqrt{\pi}}$
 
