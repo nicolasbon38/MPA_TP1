@@ -86,7 +86,7 @@ On réutilise le code précédent avec 100000 tirages, puis on élimine les vale
 
 
 ```{R}
-  
+ 
 taille <- 100000
 
 #On tire les thetas 
@@ -98,13 +98,43 @@ y <- rnorm(taille, theta/4, sqrt(2))
 ytheta <- data.frame(theta, y)
 ytheta = ytheta[ytheta[,2] < 2.01 & ytheta[,2] > 1.99,]
 
+
 ```
 
 #Question 8
-Voici l'histogramme pour theta avec y dans l'intervalle.
+Voici l'histogramme pour theta avec y dans l'intervalle [1.99, 2.01].
 ```{R}
 hist(ytheta[,1], main = 'histogramme de theta', xlab = 'theta')
 ```
+On constate que theta suit une loi normale de valeur moyenne E[2*y] avec y=2, c'est le résultat auquel on s'attendait pour y suffisamment proche du centre du nuage de point de la question Q5.
+
+#Question 9
+On représente la loi $p(y, \theta)$ en utilisant la loi conditionnelle $p(y|\theta)$ (carrés vert sur le graphe), puis en utilisant la loi conditionnelle $p(\theta|y)$ (triangles bleus sur le graphe). On les superpose et on obtient le graphe ci-dessous:
+```{R}
+taille <- 1000
+
+#On tire les thetas 
+theta <- rnorm(taille, 0, sqrt(32)) #je ne sais pas si il veut la variance ou l'ecart-type
+
+#on tire les y sachant theta
+
+y_theta <- rnorm(taille, theta/4, sqrt(2))
+
+#On tire les y
+y <- rnorm(taille, 0, sqrt(4)) #je ne sais pas si il veut la variance ou l'ecart-type
+
+#on tire les thetas sachant y
+
+theta_y <- rnorm(taille, 2*y, sqrt(16))
 
 
+#on trace les deux nuages de points pour les comparer
+plot(y_theta,theta,xlab="y",ylab="Theta",col="green",pch=0,xlim=c(-6,6),ylim=c(-15,15),cex=2)
 
+points(y,theta_y,col="blue",pch=2,cex=2)
+legend(x="bottomright", legend=c("theta en fonction de y sachant theta","theta sachant y en fonction de y"), col=c("green","blue"), pch=c(0,2))
+
+```
+On constate que les nuages de points se superposent, la loi $p(y, \theta)$ est donc bien caractérisée par ses deux lois conditionelles.
+
+#Question 10
