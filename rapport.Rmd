@@ -121,7 +121,7 @@ theta <- rnorm(taille, 0, sqrt(32)) #je ne sais pas si il veut la variance ou l'
 
 y_theta <- rnorm(taille, theta/4, sqrt(2))
 
-#On tire les y
+#On tire les y²
 y <- rnorm(taille, 0, sqrt(4)) #je ne sais pas si il veut la variance ou l'ecart-type
 
 #on tire les thetas sachant y
@@ -148,24 +148,25 @@ On constate que les nuages de points se superposent, la loi $p(y, \theta)$ est d
 On fait un échantillonage de Gibbs avec 1000 valeurs et on obtient un résultat similaire
 
 ```{R}
-taille <- 1050
 
-theta <- 0
-les_thetas <- c()
-les_y <- c()
+theta_t = 0
+t = 1100
+y_liste = c()
+theta_liste = c()
 
-for (t in seq(1, taille)){
-  y <- rnorm(1, theta / 4, sqrt(2))
-  theta <- rnorm(1, 2 * y, 4)
-  #On ne stocke pas les 100 premières valeurs
-  if (t > 50){
-    les_y <- c(les_y, y)
-    les_thetas <- c(les_thetas, theta)
+while (t > 0) {
+  y_t = rnorm(1, theta_t/4, sqrt(2))
+  theta_t = rnorm(1, 2*y_t, sqrt(16))
+  y_liste = c(y_liste, y_t)
+  theta_liste = c(theta_liste, theta_t)
+  t = t-1
   }
-}
+
+ytheta= data.frame(y_liste, theta_liste)
+ytheta = tail(ytheta, 1000)
 
 #on trace les points
-plot(les_y, les_thetas, col="grey")
+plot(y_liste, theta_liste, col="grey")
 
 #on trace la droite de l'espérance
 
@@ -173,6 +174,9 @@ curve(2*x, add=TRUE, col="blue")
 
 #on trace la droite de la régression linéaire
 
-abline(lm(les_thetas ~ les_y), col="orange")
+abline(lm(theta_liste ~ y_liste), col="orange")
 ```
 En faisant varier le nombre de valeurs initiales qu'on élimine, on s'aperçoit que ce paramètre n'a pas d'influence sur la qualité de l'échantillon, à moins que celui-ci soit vraiment petit.
+
+
+
