@@ -34,7 +34,7 @@ Le programme suivant permet de simuler des tirages de la dimension voulue de la 
 taille <- 1000
 
 #On tire les thetas 
-theta <- rnorm(taille, 0, 32) #je ne sais pas si il veut la variance ou l'ecart-type
+theta <- rnorm(taille, 0, 32) 
 
 #on tire les y sachant theta
 
@@ -115,14 +115,14 @@ On représente la loi $p(y, \theta)$ en utilisant la loi conditionnelle $p(y|\th
 taille <- 1000
 
 #On tire les thetas 
-theta <- rnorm(taille, 0, sqrt(32)) #je ne sais pas si il veut la variance ou l'ecart-type
+theta <- rnorm(taille, 0, sqrt(32)) 
 
 #on tire les y sachant theta
 
 y_theta <- rnorm(taille, theta/4, sqrt(2))
 
 #On tire les y²
-y <- rnorm(taille, 0, sqrt(4)) #je ne sais pas si il veut la variance ou l'ecart-type
+y <- rnorm(taille, 0, sqrt(4)) 
 
 #on tire les thetas sachant y
 
