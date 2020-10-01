@@ -138,3 +138,24 @@ legend(x="bottomright", legend=c("theta en fonction de y sachant theta","theta s
 On constate que les nuages de points se superposent, la loi $p(y, \theta)$ est donc bien caractérisée par ses deux lois conditionelles.
 
 #Question 10
+```{R}
+theta_t = 0
+t = 1100
+y_liste = c()
+theta_liste = c()
+
+while (t > 0) {
+  y_t = rnorm(1, theta_t/4, sqrt(2))
+  theta_t = rnorm(1, 2*y_t, sqrt(16))
+  y_liste = c(y_liste, y_t)
+  theta_liste = c(theta_liste, theta_t)
+  t = t-1
+  }
+
+ytheta= data.frame(y_liste, theta_liste)
+ytheta = tail(ytheta, 1000)
+#ytheta
+
+plot(ytheta[,1], ytheta[,2], ylab = 'y', xlab = 'theta', col="grey")
+  
+```
