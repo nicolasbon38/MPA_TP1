@@ -145,7 +145,7 @@ On constate que les nuages de points se superposent, la loi $p(y, \theta)$ est d
 
 #Question 10
 
-On fait un échantillonage de Gibbs avec 1000 valeurs et on obtient un résultat similaire
+On fait un échantillonage de Gibbs avec 1000 valeurs et on obtient un résultat similaire :
 
 ```{R}
 
