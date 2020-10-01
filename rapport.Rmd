@@ -132,7 +132,7 @@ theta_y <- rnorm(taille, 2*y, sqrt(16))
 plot(y_theta,theta,xlab="y",ylab="Theta",col="green",pch=0,xlim=c(-6,6),ylim=c(-15,15),cex=2)
 
 points(y,theta_y,col="blue",pch=2,cex=2)
-legend(x="bottomright", legend=c("theta en fonction de y sachant theta","theta sachant y en fonction de y"), col=c("green","blue"), pch=c(0,2))
+legend(x="bottomright", legend=c("theta selon (y|theta)","(theta|y) selon y"), col=c("green","blue"), pch=c(0,2))
 
 ```
 On constate que les nuages de points se superposent, la loi $p(y, \theta)$ est donc bien caractérisée par ses deux lois conditionelles.
