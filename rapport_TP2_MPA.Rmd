@@ -1,11 +1,17 @@
 ---
 title: "Rapport_TP2"
 author: "BON, BARON, FOUSSE"
-date: "9/26/2020"
+date: "10/17/2020"
 output:
   html_document:
     df_print: paged
 ---
 
 # Question 1
+Si on suppose que c=1 alors chaque tirage dde yi se fait avec la fréquence $\theta_2$. On obtient alors :
+$p(y\mid c = 1, \theta _1, \theta _2) = \prod_{i = 1}^{n}\theta _2^{y_i}(1-\theta _2)^{1-y_i}$
 
+
+# Question 2
+On suppose que c > 1. Alors les tirages $y_i$ pour $i\in \left \| 1, c-1 \right \|$ se font avec la fréquence $\theta_1$, les autres avec la fréquence $\theta_2$. D'où : 
+$p(y\mid c> 1, \theta_1, \theta_2) = \prod_{i = 1}^{c - 1} \theta _1^{y_i}(1-\theta _1)^{1-y_i}\prod_{i = c}^{n} \theta _2^{y_i}(1-\theta _2)^{1-y_i}$
