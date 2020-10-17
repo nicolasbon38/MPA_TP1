@@ -1649,6 +1649,11 @@ summary {
 <h1>Question 2</h1>
 <p>On suppose que c &gt; 1. Alors les tirages <span class="math inline">\(y_i\)</span> pour <span class="math inline">\(i\in \left \| 1, c-1 \right \|\)</span> se font avec la fréquence <span class="math inline">\(\theta_1\)</span>, les autres avec la fréquence <span class="math inline">\(\theta_2\)</span>. D’où : <span class="math inline">\(p(y\mid c&gt; 1, \theta_1, \theta_2) = \prod_{i = 1}^{c - 1} \theta _1^{y_i}(1-\theta _1)^{1-y_i}\prod_{i = c}^{n} \theta _2^{y_i}(1-\theta _2)^{1-y_i}\)</span></p>
 </div>
+<div id="question-3" class="section level1">
+<h1>Question 3</h1>
+<p>c est unfiformément distribué donc <span class="math inline">\(p(c=1) = \frac{1}{n}\)</span> ou plus simplement <span class="math inline">\(p(c) = \frac{1}{n}\)</span>. Alors: <span class="math inline">\(\frac{p(c\mid y)}{p(c=1\mid y)}\)</span> = <span class="math inline">\(\frac{p(c,y)}{p(y)}\frac{p(y)}{p(c = 1, y)}\)</span> = <span class="math inline">\(\frac{p(y \mid c)p(c)}{p(y \mid c = 1)p(c=1)}\)</span> = <span class="math inline">\(\frac{\prod_{i = 1}^{c - 1} \theta _1^{y_i}(1-\theta _1)^{1-y_i}\prod_{i = c}^{n} \theta _2^{y_i}(1-\theta _2)^{1-y_i}}{\prod_{i = 1}^{n}\theta _2^{y_i}(1-\theta _2)^{1-y_i}}\)</span> = <span class="math inline">\(\frac{\prod_{i = 1}^{c - 1} \theta _1^{y_i}(1-\theta _1)^{1-y_i}}{\prod_{i = 1}^{c-1}\theta _2^{y_i}(1-\theta _2)^{1-y_i}}\)</span></p>
+<p>Pour c = k, onn fait k-1 multiplications. Donc <span class="math inline">\(nombre\_multiplication = \sum_{k=2}^{n}k-1 = \frac{n(n-1)}{2}\)</span></p>
+</div>
 
 
 
