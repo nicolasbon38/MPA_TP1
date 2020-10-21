@@ -8,7 +8,7 @@ output:
 ---
 
 # Question 1
-Si on suppose que c=1 alors chaque tirage dde yi se fait avec la fréquence $\theta_2$. On obtient alors :
+Si on suppose que c=1 alors chaque tirage de yi se fait avec la fréquence $\theta_2$. On obtient alors :
 $p(y\mid c = 1, \theta _1, \theta _2) = \prod_{i = 1}^{n}\theta _2^{y_i}(1-\theta _2)^{1-y_i}$
 
 
@@ -17,7 +17,7 @@ On suppose que c > 1. Alors les tirages $y_i$ pour $i\in \left \| 1, c-1 \right 
 $p(y\mid c> 1, \theta_1, \theta_2) = \prod_{i = 1}^{c - 1} \theta _1^{y_i}(1-\theta _1)^{1-y_i}\prod_{i = c}^{n} \theta _2^{y_i}(1-\theta _2)^{1-y_i}$
 
 # Question 3
-c est unfiformément distribué donc $p(c=1) = \frac{1}{n}$ ou plus simplement $p(c) = \frac{1}{n}$.
+c est uniformément distribué donc $p(c=1) = \frac{1}{n}$ ou plus simplement $p(c) = \frac{1}{n}$.
 Alors:
 $\frac{p(c\mid y)}{p(c=1\mid y)}$ 
 = 
@@ -30,4 +30,86 @@ $\frac{p(c,y)}{p(y)}\frac{p(y)}{p(c = 1, y)}$
  $\frac{\prod_{i = 1}^{c - 1} \theta _1^{y_i}(1-\theta _1)^{1-y_i}}{\prod_{i = 1}^{c-1}\theta _2^{y_i}(1-\theta _2)^{1-y_i}}$
  
 Pour c = k, on fait k-1 multiplications. Donc $nombre\_multiplication = \sum_{k=2}^{n}k-1 = \frac{n(n-1)}{2}$
+
+
+
+#Question 5
+
+
+```{R}
+#On définit une fonction qui renvoie le nombre de y et les thetas dans un échantillon y coupé en c:
+
+frequences_sans_coupure <- function(y){
+  compteur <- 0
+  #idem dans le deuxième
+  for (i in seq(1:length(y))){
+    if ( y[i] == 1){
+      compteur <- compteur + 1
+    }
+  }
+  t2 <- compteur / (length(y) - c + 1)
+  return(c(0, t2, 0, compteur))
+}
+
+
+frequences <- function(y, c){
+    compteur1 <- 0
+    if (c==1){
+      return(frequences_sans_coupure(y))#on traite le cas c=1 à part
+    }
+  #on compte les 1 dans le premier morceau
+  for(i in seq(1:c-1)){
+    if (y[i] == 1){
+      compteur1 <- compteur1 + 1
+    }
+  }
+  t1 <- compteur1 / (c - 1)
+  compteur2 <- 0
+  #idem dans le deuxième
+  for (i in seq(c:length(y))){
+    if ( y[i] == 1){
+      compteur2 <- compteur2 + 1
+    }
+  }
+  t2 <- compteur2 / (length(y) - c + 1)
+  return(c(compteur1, t1, compteur2, t2))
+}
+
+
+
+y <- scan("TP2_sequence_2_2020.txt")
+n <- length(y)
+c <- floor(runif(1, 1, n + 1))
+
+for (iteration_algo in seq(1:10)){
+  #on identifie theta1 et theta2 :
+  frequences = frequences(y, c)
+  y1 = frequences[1]
+  t1 = frequences[2]
+  y2 = frequences[3]
+  t2 = frequences[4]
+  #on calcule les probabilités de c par récurrence:
+  #constante de normalisation de la loi béta :
+  a <- 1 + y2
+  b <- 1 + n - a 
+  p1 = 1/n * t2^y2 * (1 - t2)^(n-y2) * 1 / beta(a, b)
+  probas = c(p1)
+  for(i in seq(from=2,to=n)){
+    pi = probas[i - 1] * t1^y[i - 1] * (1 - t1)^(1 - y[i-1]) / (t2 ^ y[i - 1] * (1 - t2)^(1 - y[i - 1]))
+    probas = c(probas, pi)
+  }
+  #on peut alors tirer un nouveau c : on découpe l'intervalle [0, 1] en n morceaux de largeur p(c = i|y) et on regarde où on tombe
+  k = runif(1)
+  somme <- 0
+  i <- 1
+  while (somme < k){
+    print(i)
+    print(somme)
+    somme = somme + probas[i]
+    i = i + 1
+  }
+  c = probas[i]
+}
+  
+```
 
