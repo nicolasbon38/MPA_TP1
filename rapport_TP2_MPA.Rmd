@@ -37,7 +37,7 @@ Pour c = k, on fait k-1 multiplications. Donc $nombre\_multiplication = \sum_{k=
 
 
 ```{R}
-#On définit une fonction qui renvoie le nombre de y et les thetas dans un échantillon y coupé en c:
+#On définit une fonction qui renvoie le nombre de 1 dans y1...yc-1, et dans yc...yn et les thetas dans un échantillon y coupé en c:
 
 frequences_sans_coupure <- function(y){
   compteur <- 0
@@ -47,12 +47,13 @@ frequences_sans_coupure <- function(y){
       compteur <- compteur + 1
     }
   }
-  t2 <- compteur / (length(y) - c + 1)
-  return(c(0, t2, 0, compteur))
+  t2 <- compteur / (length(y) + 1)
+  return(c(0, 0, t2, compteur))
 }
 
 
 frequences <- function(y, c){
+  print(c)
     compteur1 <- 0
     if (c==1){
       return(frequences_sans_coupure(y))#on traite le cas c=1 à part
@@ -79,37 +80,38 @@ frequences <- function(y, c){
 
 y <- scan("TP2_sequence_2_2020.txt")
 n <- length(y)
-c <- floor(runif(1, 1, n + 1))
+c <- floor(runif(1, 1, n + 1)) #c au au hasard
+
 
 for (iteration_algo in seq(1:10)){
   #on identifie theta1 et theta2 :
-  frequences = frequences(y, c)
-  y1 = frequences[1]
-  t1 = frequences[2]
-  y2 = frequences[3]
-  t2 = frequences[4]
+  frequence = frequences(y, c)
+
+  y1 = frequence[1]
+  t1 = frequence[2]
+  y2 = frequence[3]
+  t2 = frequence[4]
   #on calcule les probabilités de c par récurrence:
   #constante de normalisation de la loi béta :
   a <- 1 + y2
   b <- 1 + n - a 
   p1 = 1/n * t2^y2 * (1 - t2)^(n-y2) * 1 / beta(a, b)
   probas = c(p1)
+  
   for(i in seq(from=2,to=n)){
-    pi = probas[i - 1] * t1^y[i - 1] * (1 - t1)^(1 - y[i-1]) / (t2 ^ y[i - 1] * (1 - t2)^(1 - y[i - 1]))
+    pi = probas[i - 1] * t1^y[i - 1] * ((1 - t1)^(1 - y[i-1]) / (t2 ^ y[i - 1])) * (1 - t2)^(1 - y[i - 1])*p1
     probas = c(probas, pi)
+    
   }
-  #on peut alors tirer un nouveau c : on découpe l'intervalle [0, 1] en n morceaux de largeur p(c = i|y) et on regarde où on tombe
-  k = runif(1)
-  somme <- 0
-  i <- 1
-  while (somme < k){
-    print(i)
-    print(somme)
-    somme = somme + probas[i]
-    i = i + 1
-  }
-  c = probas[i]
+  
+#somme = sum(probas)
+
+probas
 }
+
+
+
+
   
 ```
 
