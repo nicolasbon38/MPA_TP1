@@ -13,7 +13,7 @@ $p(y\mid c = 1, \theta _1, \theta _2) = \prod_{i = 1}^{n}\theta _2^{y_i}(1-\thet
 
 
 # Question 2
-On suppose que c > 1. Alors les tirages $y_i$ pour $i\in \left \| 1, c-1 \right \|$ se font avec la fréquence $\theta_1$, les autres avec la fréquence $\theta_2$. D'où : 
+On suppose que c > 1. Alors les tirages $y_i$ pour $i\in [[1, c-1]]$ se font avec la fréquence $\theta_1$, les autres avec la fréquence $\theta_2$. D'où : 
 $p(y\mid c> 1, \theta_1, \theta_2) = \prod_{i = 1}^{c - 1} \theta _1^{y_i}(1-\theta _1)^{1-y_i}\prod_{i = c}^{n} \theta _2^{y_i}(1-\theta _2)^{1-y_i}$
 
 # Question 3
@@ -31,109 +31,157 @@ $\frac{p(c,y)}{p(y)}\frac{p(y)}{p(c = 1, y)}$
  
 Pour c = k, on fait k-1 multiplications. Donc $nombre\_multiplication = \sum_{k=2}^{n}k-1 = \frac{n(n-1)}{2}$
 
+# Question 4
+
+On calcule chaque rapport de la Question 3 à l'aide du précédent de la manière suivante :
+```{r eval=FALSE}
+#La liste probas va contenir à chaque case d'indice i les p(c=i|y,t1,t2) avec t1=theta1, t2=theta2
+#On initialise p(c=i|y,t1,t2) à 1 pour le moment
+probas <- c(1)
+for(i in 2:n){
+  pi = probas[i - 1] * (t1/t2)^y[i - 1] * ((1 - t1)/(1-t2))^(1 - y[i-1])
+  probas = c(probas, pi)
+}
+```
+
+Une fois que l'on a tous les rapports pour $c\in [[ 2, n ]]$, il faut à présent calculer $p(c=1\mid y)$, on a:
+$\sum_{c=2}^{n}\frac{p(c\mid y)}{p(c=1\mid y)}$ = $\sum_{c=1}^{n}\frac{p(c\mid y)}{p(c=1\mid y)} - 1$ = $\frac{1}{p(c=1\mid y)} - 1$
+
+Finalement :
+$p(c=1\mid y)$ = $\frac{1}{\sum_{c=2}^{n}\frac{p(c\mid y)}{p(c=1\mid y)} + 1}$
+
+On obtient donc $p(c=1\mid y)$ à l'aide de la somme des rapports et du code suivant :
+
+```{r eval=FALSE}
+p1 = 1/(sum(probas) - 1 + 1) # - 1 pour enlever l'initialisation a 1 de p1 de la somme
+probas = probas*p1
+```
+Dans probas nous avons bien à la fin les $p(c=i\mid y)$ avec i l'indice de chaque élément du vecteur.
+
 # Question 5
+Voici l'algorithme itératif commenté qui nous permet de faire un échantillonnage de Gibbs:
+```{R}
+Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
+  #On définit une fonction compteur qui renvoie le nombre de 1 dans chaque partition de y(coupé en deux par c):
+  
+  #Cas où c=1
+  compteurs_sans_coupure <- function(y){
+    compteur <- 0
+    #idem dans le deuxième
+    for (i in 1:length(y)){
+      if (y[i] == 1){
+        compteur <- compteur + 1
+      }
+    }
+    return(c(0, compteur))
+  }
+  
+  #Cas général
+  compteurs <- function(y, c){
+      compteur1 <- 0
+      if (c==1){
+        return(compteurs_sans_coupure(y))#on traite le cas c=1 à part
+      }
+    #on compte les 1 dans le premier morceau
+    compteur1 = sum(y[1:c-1])
+    compteur2 = sum(y[c:length(y)])
+    #idem dans le deuxième
+    return(c(compteur1, compteur2))
+  }
+  
+  
+  #Initialisation
+  n <- length(y)
+  c <- n/2
+  
+  #Algo d'application de l'échantillonnage de Gibbs
+  for (iteration_algo in 1:50){
+    #On calcule y1(respectivement y2), le nombre de 1 avant(respectivement apres) c.
+    buffer = compteurs(y, c)
+    y1 = buffer[1]
+    y2 = buffer[2]
+    #On suppose que comme n est grand on peut calculer chaque theta comme etant le nombre de reussites(symbolisees par 1) sur le nombre d'essais.
+    t1 = y1/(c-1)
+    t2 = y2/(n-c+1)
+    #Creation du tableau qui va contenir les probas de c sachant Theta1, Theta2 et y. On initialise p(c=1|y,t1,t2) à 1 car on le calculera une fois que l'on aura toutes les autres probas avec la formule de recurrence.
+    probas = c(1)
+    
+    
+    #Afin de calculer chaque proba, on s'apprete a diviser par t2 et par 1-t2, il faut donc s'assurer que t2 ne soit égal ni a 0, ni a 1. Nous nous proposons de traiter ces cas en amont.
+    if(t2==0 || t2==1){
+      indice=length(y)
+      while(indice >=0 && y[indice]==t2){
+        indice = indice - 1
+      }
+      if(indice == 0){
+        c=1
+        t1=None
+      }else{
+          c = indice + 1
+          t1=sum(y[1:c-1])/(c-1)
+      }
+      break
+    }
+    
+    #Calcul des rapports p(c|y,t1,t2)/p(c=1|y,t1,t2) dans probas
+    for(i in 2:n){
+      pi = probas[i - 1] * (t1/t2)^y[i - 1] * ((1 - t1)/(1-t2))^(1 - y[i-1])
+      probas = c(probas, pi)
+    }
+    
+    
+    p1 = 1/(sum(probas) - 1 + 1) # - 1 pour enlever l'initialisation a 1 de p1 de la somme
+    probas = probas*p1
+    #On a les p(c|y,t1,t2) dans probas
+    
+    #On affiche les probas pour voir comment se passe notre échantillonnage
+    if(Affiche_probas){
+      plot.default(probas)
+    }
+    
+    #On peut alors tirer un nouveau c : on découpe l'intervalle [0, sum(probas)] en n morceaux de largeur p(c = i|y) et on regarde où on tombe
+    k = runif(1, min=0, max=sum(probas)) #=1
+  
+    somme <- 0
+    i <- 0
+    while (somme < k){
+      i = i + 1
+      somme = somme + probas[i]
+    }
+    #Le nouveau c choisi est celui qui possède la plus grande probabilité de tomber
+    c = i
+  }
+  #On affiche le résultat final composé de theta1, theta2, c
+  if(Affiche_resultat){
+    print(t1)
+    print(t2)
+    print(c) 
+  }
+  return (c(t1,t2,c))
+}
+```
+
+# Question 6
+Fonctionne pas pour l'instant
+```{R}
+# test <- c(0, 0.1 , 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+# n=length(test)
+# resultat1 <- matrix(rep(0,n*n),n,n)
+# resultat2 <- matrix(rep(0,n*n),n,n)
+# for(i in 1:n){
+#   for (j in 1:n){
+#     resultat1[i, j] = Algo_de_Gibbs(c(rbinom(200,1,test[i]),rbinom(100,1,test[j])), FALSE, FALSE)
+#     
+#   }
+# }
+# print(resultat1)
+```
+
+# Question 7
 
 ```{R}
-#On définit une fonction qui renvoie le nombre de y et les thetas dans un échantillon y coupé en c:
-
-compteurs_sans_coupure <- function(y){
-  compteur <- 0
-  #idem dans le deuxième
-  for (i in 1:length(y)){
-    if (y[i] == 1){
-      compteur <- compteur + 1
-    }
-  }
-  return(c(0, compteur))
-}
-
-compteurs <- function(y, c){
-    compteur1 <- 0
-    if (c==1){
-      return(compteurs_sans_coupure(y))#on traite le cas c=1 à part
-    }
-  #on compte les 1 dans le premier morceau
-  compteur1 = sum(y[1:c-1])
-  compteur2 = sum(y[c:length(y)])
-  #idem dans le deuxième
-  print(c)
-  return(c(compteur1, compteur2))
-}
-
-
-y_test <-scan("TP2_sequence_1_2020.txt")
-y <- c(rbinom(200,1,0.2),rbinom(100,1,0.6))
-n <- length(y)
-c <- n/2
-
-for (iteration_algo in 1:50){
-  #On calcule y1(respectivement y2), le nombre de 1 avant(respectivement apres) c.
-  buffer = compteurs(y, c)
-  y1 = buffer[1]
-  y2 = buffer[2]
-  #On suppose que comme n est grand on peut calculer chaque theta comme etant le nombre de reussites(symbolisees par 1) sur le nombre d'essais.
-  t1 = y1/(c-1)
-  t2 = y2/(n-c+1)
-  #Creation du tableau qui va contenir les probas de c sachant Theta1, Theta2 et y. On initialise p(c=1|y,t1,t2) à 1 car on le calculera une fois que l'on aura toutes les autres probas avec la formule de recurrence.
-  probas = c(1)
-  
-  #Afin de calculer chaque proba, on s'apprete a diviser par t2 et par 1-t2, il faut donc s'assurer que t2 ne soit égal ni a 0, ni a 1. Nous nous proposons de traiter ces cas en amont.
-  if(t2==0 || t2==1){
-    indice=length(y)
-    while(indice >=0 && y[indice]==t2){
-      indice = indice - 1
-    }
-    if(indice == 0){
-      c=1
-      t1=None
-    }else{
-        c = indice + 1
-        t1=sum(y[1:c-1])/(c-1)
-    }
-    break
-  }
-  
-  #Calcul des p(c|y,t1,t2) dans probas
-  for(i in 2:n){
-    pi = probas[i - 1] * (t1/t2)^y[i - 1] * ((1 - t1)/(1-t2))^(1 - y[i-1])
-    probas = c(probas, pi)
-  }
-  
-  
-  #probas
-  p1 = 1/(sum(probas) - 1 + 1) # - 1 pour enlever l'initialisation a 1 de p1 de la somme
-  probas = probas*p1
-  #print(probas)
-  
-  #somme = sum(probas)
-  #somme
-  plot.default(probas)
-  #on peut alors tirer un nouveau c : on découpe l'intervalle [0, sum(probas)] en n morceaux de largeur p(c = i|y) et on regarde où on tombe
-  #print(probas)
-  #print("k :")
-  #print(sum(probas))
-  
-
-  k = runif(1, min=0, max=sum(probas)) #=1
-  #print(k)
-  
-  somme <- 0
-  i <- 0
-  
-  #print(k)
-  #print("somme :")
-  #print(somme)
-  while (somme < k){
-    i = i + 1
-    somme = somme + probas[i]
-  }
-  c = i
-  print(c)
-  #print(probas)
-}
-
-print(t1)
-print(t2)
-print(c)
+Algo_de_Gibbs(scan("TP2_sequence_1_2020.txt"), FALSE, FALSE)
+Algo_de_Gibbs(scan("TP2_sequence_2_2020.txt"), FALSE, FALSE)
 ```
+
 
