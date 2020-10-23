@@ -95,7 +95,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
   c <- n/2
   
   #Algo d'application de l'échantillonnage de Gibbs
-  for (iteration_algo in 1:50){
+  for (iteration_algo in 1:1000){
     #On calcule y1(respectivement y2), le nombre de 1 avant(respectivement apres) c.
     buffer = compteurs(y, c)
     y1 = buffer[1]
@@ -141,7 +141,6 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
     
     #On peut alors tirer un nouveau c : on découpe l'intervalle [0, sum(probas)] en n morceaux de largeur p(c = i|y) et on regarde où on tombe
     k = runif(1, min=0, max=sum(probas)) #=1
-  
     somme <- 0
     i <- 0
     while (somme < k){
@@ -150,6 +149,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
     }
     #Le nouveau c choisi est celui qui possède la plus grande probabilité de tomber
     c = i
+    #print(c)
   }
   #On affiche le résultat final composé de theta1, theta2, c
   if(Affiche_resultat){
@@ -171,17 +171,101 @@ Fonctionne pas pour l'instant
 # for(i in 1:n){
 #   for (j in 1:n){
 #     resultat1[i, j] = Algo_de_Gibbs(c(rbinom(200,1,test[i]),rbinom(100,1,test[j])), FALSE, FALSE)
-#     
+# 
 #   }
 # }
 # print(resultat1)
 ```
 
-# Question 7
+Testons des cas limites : pas de coupure (ie c=1)
 
 ```{R}
-Algo_de_Gibbs(scan("TP2_sequence_1_2020.txt"), FALSE, FALSE)
-Algo_de_Gibbs(scan("TP2_sequence_2_2020.txt"), FALSE, FALSE)
+t2 <- runif(1)
+y = c()
+  for (i in seq(1, 50)){
+    a = runif(1)
+    if (a < t2){
+      y = c(y, 1)
+    }
+    else{
+      y = c(y, 0)
+    }
+  }
+
+print(t2)
+print(y)
+print(length(y))
+Algo_de_Gibbs(y, FALSE, TRUE)
 ```
+
+On constate que notre algorithme plante dès que c atteint la valeur 1. Cela vient du fait que $\theta_1$ n'est pas défini quand $c=1$, et par conséquent la formule de récurrence n'est plus utilisable.
+
+
+Autre cas : un théta très petit :
+
+```{R}
+genere_echantillon <- function(n, c, t1, t2){ #ne marche pas si c = 1 !!
+  y = c()
+  for (i in seq(1, c - 1)){
+    a = runif(1)
+    if (a < t1){
+      y = c(y, 1)
+    }
+    else{
+      y = c(y, 0)
+    }
+  }
+  for (i in seq(c, n)){
+  a = runif(1)
+  if (a < t2){
+    y = c(y, 1)
+  }
+  else{
+    y = c(y, 0)
+  }
+  return(y)
+  }
+}
+
+t1 = 0.01
+t2 = 0.4
+c = 20
+y = genere_echantillon(50, c, t1, t2)
+print(t1)
+print(t2)
+Algo_de_Gibbs(y, FALSE, FALSE)
+```
+
+
+On constate que $\theta_1$ est rapidement évalué en 0, ce qui a pour conséquence d'évaluer $theta_2$ à 1. Néanmoins, l'algorithme estime tout de même c correctement.
+
+# Question 7
+
+On fait tourner l'algo sur les échantillons fournis et on obtient ces résultats :
+
+
+```{R}
+les_t1 = c()
+les_t2 = c()
+les_c = c()
+for (u in seq(1,100)){
+  resultat = Algo_de_Gibbs(scan("TP2_sequence_1_2020.txt"), FALSE, FALSE)
+  #resultat = Algo_de_Gibbs(scan("TP2_sequence_2_2020.txt"), FALSE, FALSE)
+  les_t1 = c(les_t1, resultat[1])
+  les_t2 = c(les_t2, resultat[2])
+  les_c = c(les_c, resultat[3])
+}
+```
+
+
+Les résultats sont rassemblés dans le tableau suivant :
+
+| n°jeu de données | c calculé | theta1 | theta2 | borne inférieure de l'intervalle à 75% | borne supérieure de l'intervalle à 75% |
+|:----------------:|:---------:|:------:|:------:|:--------------------------------------:|:--------------------------------------:|
+|         1        |    51.7   |  0.25  |  0.62  |                  50.9                  |                  52.5                  |
+|         2        |    295    |  0.38  |  0.14  |                  294.3                 |                  295.9                 |
+
+
+
 
 
