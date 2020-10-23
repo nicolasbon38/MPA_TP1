@@ -35,8 +35,8 @@ Pour c = k, on fait k-1 multiplications. Donc $nombre\_multiplication = \sum_{k=
 
 On calcule chaque rapport de la Question 3 à l'aide du précédent de la manière suivante :
 ```{r eval=FALSE}
-#La liste probas va contenir à chaque case d'indice i les p(c=i|y,t1,t2) avec t1=theta1, t2=theta2
-#On initialise p(c=i|y,t1,t2) à 1 pour le moment
+#La liste probas va contenir à chaque case d'indice i les p(c=i|y,t1,t2)/p1 avec t1=theta1, t2=theta2
+#On initialise p(c=i|y,t1,t2) à 1
 probas <- c(1)
 for(i in 2:n){
   pi = probas[i - 1] * (t1/t2)^y[i - 1] * ((1 - t1)/(1-t2))^(1 - y[i-1])
@@ -44,7 +44,7 @@ for(i in 2:n){
 }
 ```
 
-Une fois que l'on a tous les rapports pour $c\in [[ 2, n ]]$, il faut à présent calculer $p(c=1\mid y)$, on a:
+Une fois que l'on a tous les rapports pour $c\in [[ 2, n ]]$, il faut à présent calculer $p(c=1\mid y)$ (ie p1), on a:
 $\sum_{c=2}^{n}\frac{p(c\mid y)}{p(c=1\mid y)}$ = $\sum_{c=1}^{n}\frac{p(c\mid y)}{p(c=1\mid y)} - 1$ = $\frac{1}{p(c=1\mid y)} - 1$
 
 Finalement :
@@ -54,7 +54,7 @@ On obtient donc $p(c=1\mid y)$ à l'aide de la somme des rapports et du code sui
 
 ```{r eval=FALSE}
 p1 = 1/(sum(probas) - 1 + 1) # - 1 pour enlever l'initialisation a 1 de p1 de la somme
-probas = probas*p1
+probas = probas*p1 #prbas conient à présent  p(c=i|y,t1,t2) pour tout i
 ```
 Dans probas nous avons bien à la fin les $p(c=i\mid y)$ avec i l'indice de chaque élément du vecteur.
 
@@ -63,7 +63,8 @@ Dans probas nous avons bien à la fin les $p(c=i\mid y)$ avec i l'indice de chaq
 Voici l'algorithme itératif commenté qui nous permet de faire un échantillonnage de Gibbs:
 ```{R}
 Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
-  #On définit une fonction compteur qui renvoie le nombre de 1 dans chaque partition de y(coupé en deux par c):
+  
+  #On définit des fonction compteurs qui renvoie le nombre de 1 dans chaque partition de y(coupé en deux par c):
   
   #Cas où c=1
   compteurs_sans_coupure <- function(y){
@@ -95,7 +96,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
     buffer = compteurs(y, c)
     y1 = buffer[1]
     y2 = buffer[2]
-    #On suppose que comme n est grand on peut calculer chaque theta comme etant le nombre de reussites(symbolisees par 1) sur le nombre d'essais.
+    #On suppose que comme n est grand on peut calculer chaque theta comme etant le nombre de reussites(symbolisees par y_i = 1) sur le nombre d'essais, dans la partie de y correspondante.
     t1 = y1/(c-1)
     t2 = y2/(n-c+1)
     #Creation du tableau qui va contenir les probas de c sachant Theta1, Theta2 et y. On initialise p(c=1|y,t1,t2) à 1 car on le calculera une fois que l'on aura toutes les autres probas avec la formule de recurrence.
@@ -106,7 +107,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
     #Si on entre dans le if, c'est qu'on est dans un cas limite et on ne peut plus avancer. Par consquent l'algorithme s'arrête.
     if(t2==0 || t2==1){
       indice=length(y)
-      while(indice >=0 && y[indice]==t2){
+      while(indice >0 && y[indice]==t2){
         indice = indice - 1
       }
       if(indice == 0){
@@ -118,6 +119,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
       }
       break
     }
+    #cas c = 1, theta1 n'est pas défini
     if (c==1){
       t1 = -1
       break
@@ -161,10 +163,10 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
 # Question 6
 
 ```{R}
-#on fait des tests pour tous des couple de valeur theta1 et theta2 
+#on fait des tests pour tous des couple de valeur theta1 et theta2, c = 201
 Algo_de_Gibbs(c(rbinom(200,1,0.3),rbinom(100,1,0.4)),FALSE,FALSE)
 test <- c(0.1 , 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
-n=2
+n=length(test)
 resultat1 <- matrix(rep(0,n*n),n,n) #t1
 resultat2 <- matrix(rep(0,n*n),n,n) #t2
 resultat3 <- matrix(rep(0,n*n),n,n) #c
@@ -180,9 +182,11 @@ print(resultat1)
 print(resultat2)
 print(resultat3)
 ```
+On observe que l'évaluation de la valeur de c = 201, on obtient c = 1 ou c=n si theta1 et theta2 sont trop proches ce qui est logique (si $\theta_1$ = $\theta_2$, il n'y a pas de coupure).
 
 
-Testons des cas limites : pas de coupure (ie c=1)
+
+A présent, testons des cas limites : pas de coupure (ie c=1)
 
 ```{R}
 t2 <- runif(1)
@@ -196,20 +200,18 @@ y = c()
       y = c(y, 0)
     }
   }
-
-print(t2)
-print(y)
-print(length(y))
-#Algo_de_Gibbs(y, FALSE, TRUE)
+print(t2) #valeur attendue pour theta2
+Algo_de_Gibbs(y, FALSE, FALSE)
 ```
 
-On constate que notre algorithme plante dès que c atteint la valeur 1. Cela vient du fait que $\theta_1$ n'est pas défini quand $c=1$, et par conséquent la formule de récurrence n'est plus utilisable.
+On constate que l'algorithme fonctionne même dans ce cas limite.
 
-Autre cas : un théta très petit :
+Autre cas limite : un théta très petit :
 
 ```{R}
-genere_echantillon <- function(n, c, t1, t2){ #ne marche pas si c = 1 !!
+genere_echantillon <- function(n, c, t1, t2){ 
   y = c()
+  #on génère c-1  0 et 1 avec une fréquence t1
   for (i in seq(1, c - 1)){
     a = runif(1)
     if (a < t1){
@@ -219,6 +221,7 @@ genere_echantillon <- function(n, c, t1, t2){ #ne marche pas si c = 1 !!
       y = c(y, 0)
     }
   }
+  #idem n-c+1 éléments avec t2
   for (i in seq(c, n)){
   a = runif(1)
   if (a < t2){
@@ -237,11 +240,11 @@ c = 4
 y = genere_echantillon(50, c, t1, t2)
 print(t1)
 print(t2)
-#Algo_de_Gibbs(y, FALSE, FALSE)
+Algo_de_Gibbs(y, FALSE, FALSE)
 ```
 
 
-On constate que $\theta_1$ est rapidement évalué en 0, ce qui a pour conséquence d'évaluer $theta_2$ à 1. Néanmoins, l'algorithme estime tout de même c correctement.
+On constate que $\theta_1$ est rapidement évalué en 0, ce qui a pour conséquence d'évaluer $\theta_2$ à 1. Néanmoins, l'algorithme estime tout de même c correctement.
 
 # Question 7
 
@@ -249,6 +252,8 @@ On fait tourner l'algo sur les échantillons fournis et on obtient ces résultat
 
 
 ```{R results='hide'}
+#commenté ici car très long, résultats ci-dessous
+
 # les_t1 = c()
 # les_t2 = c()
 # les_c = c()
