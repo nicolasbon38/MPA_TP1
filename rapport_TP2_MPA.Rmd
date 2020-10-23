@@ -59,6 +59,7 @@ probas = probas*p1
 Dans probas nous avons bien à la fin les $p(c=i\mid y)$ avec i l'indice de chaque élément du vecteur.
 
 # Question 5
+
 Voici l'algorithme itératif commenté qui nous permet de faire un échantillonnage de Gibbs:
 ```{R}
 Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
@@ -66,13 +67,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
   
   #Cas où c=1
   compteurs_sans_coupure <- function(y){
-    compteur <- 0
-    #idem dans le deuxième
-    for (i in 1:length(y)){
-      if (y[i] == 1){
-        compteur <- compteur + 1
-      }
-    }
+    compteur =  sum(y[1:length(y)])
     return(c(0, compteur))
   }
   
@@ -108,6 +103,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
     
     
     #Afin de calculer chaque proba, on s'apprete a diviser par t2 et par 1-t2, il faut donc s'assurer que t2 ne soit égal ni a 0, ni a 1. Nous nous proposons de traiter ces cas en amont.
+    #Si on entre dans le if, c'est qu'on est dans un cas limite et on ne peut plus avancer. Par consquent l'algorithme s'arrête.
     if(t2==0 || t2==1){
       indice=length(y)
       while(indice >=0 && y[indice]==t2){
@@ -115,15 +111,18 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
       }
       if(indice == 0){
         c=1
-        t1=None
+        t1=-1
       }else{
           c = indice + 1
           t1=sum(y[1:c-1])/(c-1)
       }
       break
     }
-    
-    #Calcul des rapports p(c|y,t1,t2)/p(c=1|y,t1,t2) dans probas
+    if (c==1){
+      t1 = -1
+      break
+    }
+      #Calcul des rapports p(c|y,t1,t2)/p(c=1|y,t1,t2) dans probas
     for(i in 2:n){
       pi = probas[i - 1] * (t1/t2)^y[i - 1] * ((1 - t1)/(1-t2))^(1 - y[i-1])
       probas = c(probas, pi)
@@ -131,8 +130,7 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
     
     
     p1 = 1/(sum(probas) - 1 + 1) # - 1 pour enlever l'initialisation a 1 de p1 de la somme
-    probas = probas*p1
-    #On a les p(c|y,t1,t2) dans probas
+    probas = probas*p1 #On multiplie tous les rapport pour avoir les p(c|y,t1,t2) dans probas
     
     #On affiche les probas pour voir comment se passe notre échantillonnage
     if(Affiche_probas){
@@ -147,9 +145,8 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
       i = i + 1
       somme = somme + probas[i]
     }
-    #Le nouveau c choisi est celui qui possède la plus grande probabilité de tomber
     c = i
-    #print(c)
+ 
   }
   #On affiche le résultat final composé de theta1, theta2, c
   if(Affiche_resultat){
@@ -162,20 +159,28 @@ Algo_de_Gibbs<-function(y,Affiche_probas,Affiche_resultat){
 ```
 
 # Question 6
-Fonctionne pas pour l'instant
+
 ```{R}
-# test <- c(0, 0.1 , 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-# n=length(test)
-# resultat1 <- matrix(rep(0,n*n),n,n)
-# resultat2 <- matrix(rep(0,n*n),n,n)
-# for(i in 1:n){
-#   for (j in 1:n){
-#     resultat1[i, j] = Algo_de_Gibbs(c(rbinom(200,1,test[i]),rbinom(100,1,test[j])), FALSE, FALSE)
-# 
-#   }
-# }
-# print(resultat1)
+#on fait des tests pour tous des couple de valeur theta1 et theta2 
+Algo_de_Gibbs(c(rbinom(200,1,0.3),rbinom(100,1,0.4)),FALSE,FALSE)
+test <- c(0.1 , 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+n=2
+resultat1 <- matrix(rep(0,n*n),n,n) #t1
+resultat2 <- matrix(rep(0,n*n),n,n) #t2
+resultat3 <- matrix(rep(0,n*n),n,n) #c
+for(i in 1:n){
+  for (j in 1:n){
+    values = Algo_de_Gibbs(c(rbinom(200,1,test[i]),rbinom(100,1,test[j])), FALSE, FALSE)
+    resultat1[i, j] = values[1]
+    resultat2[i, j] = values[2]
+    resultat3[i, j] = values[3]
+  }
+}
+print(resultat1)
+print(resultat2)
+print(resultat3)
 ```
+
 
 Testons des cas limites : pas de coupure (ie c=1)
 
@@ -195,11 +200,10 @@ y = c()
 print(t2)
 print(y)
 print(length(y))
-Algo_de_Gibbs(y, FALSE, TRUE)
+#Algo_de_Gibbs(y, FALSE, TRUE)
 ```
 
 On constate que notre algorithme plante dès que c atteint la valeur 1. Cela vient du fait que $\theta_1$ n'est pas défini quand $c=1$, et par conséquent la formule de récurrence n'est plus utilisable.
-
 
 Autre cas : un théta très petit :
 
@@ -244,17 +248,17 @@ On constate que $\theta_1$ est rapidement évalué en 0, ce qui a pour conséque
 On fait tourner l'algo sur les échantillons fournis et on obtient ces résultats :
 
 
-```{R}
-les_t1 = c()
-les_t2 = c()
-les_c = c()
-for (u in seq(1,100)){
-  resultat = Algo_de_Gibbs(scan("TP2_sequence_1_2020.txt"), FALSE, FALSE)
-  #resultat = Algo_de_Gibbs(scan("TP2_sequence_2_2020.txt"), FALSE, FALSE)
-  les_t1 = c(les_t1, resultat[1])
-  les_t2 = c(les_t2, resultat[2])
-  les_c = c(les_c, resultat[3])
-}
+```{R results='hide'}
+# les_t1 = c()
+# les_t2 = c()
+# les_c = c()
+# for (u in seq(1,100)){
+#   resultat = Algo_de_Gibbs(scan("TP2_sequence_1_2020.txt"), FALSE, FALSE)
+#   #resultat = Algo_de_Gibbs(scan("TP2_sequence_2_2020.txt"), FALSE, FALSE)
+#   les_t1 = c(les_t1, resultat[1])
+#   les_t2 = c(les_t2, resultat[2])
+#   les_c = c(les_c, resultat[3])
+# }
 ```
 
 
