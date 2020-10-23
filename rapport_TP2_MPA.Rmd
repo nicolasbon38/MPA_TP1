@@ -229,11 +229,11 @@ genere_echantillon <- function(n, c, t1, t2){ #ne marche pas si c = 1 !!
 
 t1 = 0.01
 t2 = 0.4
-c = 20
+c = 4
 y = genere_echantillon(50, c, t1, t2)
 print(t1)
 print(t2)
-Algo_de_Gibbs(y, FALSE, FALSE)
+#Algo_de_Gibbs(y, FALSE, FALSE)
 ```
 
 
