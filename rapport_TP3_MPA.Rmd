@@ -1,0 +1,53 @@
+---
+title: "rapport_TP3_MPA"
+author: "BON, BARON, FOUSSE"
+date: "11/10/2020"
+output: html_document
+---
+
+#Partie 1
+
+## Question 1
+
+La loi générative s'exprime sous la forme :
+\[
+p(y|\theta) = \prod_{i=1}^{n} p(y_i|\theta) = \prod_{i=1}^n e^{-\theta} \times \frac{\theta^{y_i}}{y_i!} = e^{-n\theta} \times \frac{\theta^{\sum_{i=1}^n y_i}}{\prod_{i=1}^n y_i!} = e^{-n\theta} \times \frac{\theta^{n\overline{y}}}{\prod_{i=1}^ny_i!}
+\]
+
+##Question 2
+
+Pour déterminer la loi a posteriori, on utilise la formule de Bayes :
+
+\[
+p(\theta|y) \propto p(\theta)p(y|\theta) \propto \frac{1}{\theta}e^{-n\theta}\frac{\theta^{n\overline{y}}}{\prod_{i=1}^ny_i!} \propto e^{-n\theta} \theta^{n\overline{y} - 1}
+\]
+avec $\overline{y} la moyenne empirique des données.
+
+On peut calculer la constante de normalisation $C$ en intégrant cette expression par rapport à $\theta$.
+
+\[
+C = \int_0^{+\infty}e^{-n\theta}\theta^{n\overline{y} - 1}d\theta
+\]
+En effectuant $n\overline{y}-1$ intégrations par parties, on arrive à :
+\[
+C = \frac{(n\overline{y} - 1)!}{n^{n\overline{y} - 1}}
+\]
+
+Ainsi, finalement on obtient :
+\[
+p(\theta|y) = \frac{1}{C}e^{-n\theta}\theta^{n\overline{y} - 1}
+\]
+
+On peut à présent calculer l'espérance de la loi a posteriori :
+
+\[
+\mathbb{E}(\theta|y) = \frac{1}{C}\int_0^{+\infty}\theta p(\theta|y)d\theta = \frac{1}{C}\int_0^{+\infty}e^{-n\theta}\theta^{n\overline{y}}d\theta
+\]
+
+En réutilisant le calcul de la constante, on aboutit à :
+
+\[
+\mathbb{E}(\theta|y) = \frac{1}{C}\frac{(n\overline{y})!}{n^{n\overline{y} + 1}} = \frac{n\overline{y}}{n} = \overline{y}
+\]
+
+
