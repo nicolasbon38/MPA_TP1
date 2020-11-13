@@ -50,4 +50,39 @@ En réutilisant le calcul de la constante, on aboutit à :
 \mathbb{E}(\theta|y) = \frac{1}{C}\frac{(n\overline{y})!}{n^{n\overline{y} + 1}} = \frac{n\overline{y}}{n} = \overline{y}
 \]
 
+```{r}
+#Metropolis-Hastings
+#kernel = random walk
+nit = 1000
+theta.0 <- 0.1
+theta.post <- theta.0
+log.likelihood <- NULL
+
+for (i in 1:nit) {
+# proposal
+b <- 100
+theta.1 <- rbeta(1,b*theta.0/(1-theta.0), b)
+# MH ratio
+ratio1 <- (theta.1/theta.0)^(y)* ((1 - theta.1)/(1 - theta.0))^(n-y)
+ratio2 <- dbeta(theta.0, b*theta.1/(1-theta.1), b)
+/dbeta(theta.1, b*theta.0/(1-theta.0), b)
+ratio <- ratio1*ratio2
+if (runif(1) < ratio) {theta.0 <- theta.1}
+theta.post <- c(theta.post,theta.0)
+log.likelihood <- c(log.likelihood, y*log(theta.0) + (n-y)*log(1 - theta.0))
+}
+81
+# show results
+u <- seq(0, 1, length= 200)
+par(mfrow=c(1,3))
+plot(u, dbeta(u, 10, 12), type="n", ylab="Frequency",
+main="Posterior distribution (burnin = 200)", xlab = "x")
+hist(theta.post[200:1000], col = "blue" , prob = T, add = T)
+lines(u, dbeta(u, 10, 12), col = 2, lwd = 3)
+plot(u, dbeta(u, 10, 12), type="n", ylab="Frequency",
+main="150 sweeps", xlab = "x")
+hist(theta.post[1:150], col = "yellow" , prob = T, add = T)
+lines(u, dbeta(u, 10, 12), col = 2, lwd = 3)
+plot(log.likelihood[1:100], cex = .5, pch = 19, type = "l")
+```
 
