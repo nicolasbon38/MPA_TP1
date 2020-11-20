@@ -54,20 +54,25 @@ En réutilisant le calcul de la constante, on aboutit à :
 
 
 ```{R}
-niter = 10000
-les_thetas = c()
-y_read = scan(file = 'TP3_mpa_2020.txt')
-y = c()
-for (i in seq(1:40)){
-  y = c(y, y_read[i])
-}
-n=length(y)
+theta = 11
+n = 30
+y = rpois(n, theta)
 
+# y_read = scan(file = 'TP3_mpa_2020.txt')
+# y = c()
+# for (i in seq(1:40)){
+#   y = c(y, y_read[i])
+# }
+
+
+
+
+les_thetas = c()
 for (i in seq(1:1000)){
   #Metropolis-Hastings
   
   #Etape 1
-  niter = 100
+  niter = 1000
   t = 0
   theta.t = 11
 
@@ -101,17 +106,11 @@ for (i in seq(1:1000)){
   }
   les_thetas = c(les_thetas, theta.t)
 }
-#on vire les valeurs aberrantes
-les_thetas_filtres = c()
-for(i in seq(1:length(les_thetas))){
-  if (les_thetas[i] < 14 & les_thetas[i] > 9.5){
-    les_thetas_filtres = c(les_thetas_filtres, les_thetas[i])
-  }
-}
+
 
 
 print(length(les_thetas) - length(les_thetas_filtres))
-hist(les_thetas_filtres, breaks=50, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")  #histogramme normalisé à 1
+hist(les_thetas, breaks=50, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")  #histogramme normalisé à 1
 x_graph = seq(from=0, to=20, by=0.1)
 y_graph = dgamma(x_graph, shape=n*mean(y), scale=1/n)
 lines(x_graph, y_graph)
