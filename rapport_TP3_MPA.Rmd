@@ -50,66 +50,6 @@ En réutilisant le calcul de la constante, on aboutit à :
 \mathbb{E}(\theta|y) = \frac{1}{C}\frac{(n\overline{y})!}{n^{n\overline{y} + 1}} = \frac{n\overline{y}}{n} = \overline{y}
 \]
 
-```{r}
-# library(Rmpfr)
-# les_thetas = c()
-# y_read = scan(file = 'TP3_mpa_2020.txt')
-# y = c()
-# for (i in seq(1:40)){
-#   y = c(y, y_read[i])
-# }
-# n=length(y)
-# 
-# for (i in seq(1:100)){
-#   #Metropolis-Hastings
-#   
-#   #Etape 1
-#   niter = 100
-#   t = 0
-#   theta.t = 11
-#   precision = 100
-#   
-#   for (k in seq(1:niter)){
-#     #Etape 2
-#     theta.star = rexp(1, rate= 1 / theta.t)
-#     theta.star
-#     #Etape 3
-#     big.theta.star = mpfr(theta.star, precision)
-#     
-#     big.n1 = exp(-n*theta.star)*big.theta.star^(n*mean(y) - 1)
-#     n2 = dexp(theta.t, rate=1/theta.star)
-#     big.theta.t = mpfr(theta.t, precision)
-#     big.d1 = exp(-n*theta.t) * big.theta.t^(n*mean(y) - 1)
-#     d2 = dexp(theta.star, rate=1/theta.t)
-#     big.r = (big.n1 * n2)/(big.d1 * d2)
-#     #print(big.r)
-#         #etape 4
-#     if (1 < big.r){
-#       p = 1
-#     }
-#     else{
-#       p = big.r
-#     }
-#     tirage = runif(1)
-#     if (tirage < p){
-#       theta.t = theta.star
-#     }
-#     #etape 5 done
-#   }
-# les_thetas = c(les_thetas, theta.t)
-# }
-# 
-# hist(les_thetas)
-# x_graph = seq(1:20)
-# C = factorial(n*mean(y) - 1)/n^(n*mean(y) - 1)
-# big.x_graph = c()
-# for (j in seq(1:length(x_graph))){
-#   big.x_graph = c(big.x_graph, mpfr(x_graph[j]))
-# }
-# big.y_graph =exp(-n*big.x_graph)*(big.x_graph)^(n*mean(y) - 1) / C
-# plot(x_graph, y_graph)
-
-```
 
 
 
@@ -172,14 +112,9 @@ for(i in seq(1:length(les_thetas))){
 
 print(length(les_thetas) - length(les_thetas_filtres))
 hist(les_thetas_filtres, breaks=50, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")  #histogramme normalisé à 1
-x_graph = seq(from=1, to=30, by=0.1)
-#C = factorial(n*mean(y) - 1)/n^(n*mean(y) - 1)
-theorique_non_normalisee <- function(x){
-  return(exp(n * (mean(y) * log(x) - x)) - log(x)) #forme un peu alambiquée pour ne pas heurter l'infini machine de r
-}
-C_normalisation = integrate(theorique_non_normalisee, lower = 0, upper=20)$value
-y_graph = theorique_non_normalisee(x_graph) / C_normalisation
-lines(x_graph, y_graph / max(y_graph))
+x_graph = seq(from=0, to=20, by=0.1)
+y_graph = dgamma(x_graph, shape=n*mean(y), scale=1/n)
+lines(x_graph, y_graph)
 
 ```
 L'histogramme correspond. Il serait probablement plus performant avec plus de données, mais cela donnerait des valeurs trop grandes pour êtres calculées par R
