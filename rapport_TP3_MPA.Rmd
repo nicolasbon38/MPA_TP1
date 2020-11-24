@@ -5,7 +5,7 @@ date: "11/10/2020"
 output: html_document
 ---
 
-#Partie 1
+# Partie 1
 
 ## Question 1
 
@@ -54,24 +54,17 @@ En réutilisant le calcul de la constante, on aboutit à :
 
 
 ```{R}
-theta = 11
-n = 30
-y = rpois(n, theta)
+theta.reel = 11
+n = 30 #taille du tirage, ne peut pas être beaucoup plus grand sinon on risque d'overflow dans le calcul de r
+y = rpois(n, theta.reel)
 
-# y_read = scan(file = 'TP3_mpa_2020.txt')
-# y = c()
-# for (i in seq(1:40)){
-#   y = c(y, y_read[i])
-# }
-
-
-
-
+#on fait un tirage de thetas avec l'algorithme de Metropolis-Hastings
+nthetas = 1000
 les_thetas = c()
-for (i in seq(1:1000)){
+for (i in seq(1:nthetas)){
   #Metropolis-Hastings
   
-  #Etape 1
+  #Etape 1 : initialisation
   niter = 1000
   t = 0
   theta.t = 11
@@ -110,10 +103,84 @@ for (i in seq(1:1000)){
 
 
 print(length(les_thetas) - length(les_thetas_filtres))
-hist(les_thetas, breaks=50, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")  #histogramme normalisé à 1
+hist(les_thetas, breaks=50, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")  # on trace l'histogramme des thétas normalisé à 1
 x_graph = seq(from=0, to=20, by=0.1)
-y_graph = dgamma(x_graph, shape=n*mean(y), scale=1/n)
-lines(x_graph, y_graph)
+y_graph = dgamma(x_graph, shape=n*mean(y), scale=1/n) #on trace la densité réelle
+lines(x_graph, y_graph) #on superpose les deux graphes
 
 ```
 L'histogramme correspond. Il serait probablement plus performant avec plus de données, mais cela donnerait des valeurs trop grandes pour êtres calculées par R
+
+
+# Partie 2
+
+Là il faut rédiger la partie théorique
+
+
+
+Implémentation de l'algo de Gibbs :
+
+```{R}
+#on commence par récupérer les données
+y <- scan('TP3_mpa_2020.txt')
+n = length(y)
+
+#on définit le nombre de catégories
+K = 2
+
+#on initialise les vecteurs z et thetas
+z <- floor(runif(n, 0, K))
+t <- runif(K, 0, max(y))
+
+#on fait tourner l'algo
+
+niter=100
+for (iter in seq(1:niter)){
+  #GS1 : maj de z
+    #On parcourt le vecteur z
+    for (i in seq(1:n)){
+          #On définit la nouvelle loi de probas : vecteur de longueur K des p(z=k)
+         i = 1
+        probas_z = c()
+        for (k in seq (1:K)){
+          probas_z = c(probas_z, t[k]^y[i]*exp(-t[k]) / sum(t^y[i]*exp(-t)))
+        }
+        #print(probas_z)
+        #On fait un tirage suivant cette loi
+        z[i] = sample(1:K, 1, prob=probas_z)
+    }
+  #GS2 : maj de theta
+  #on parcourt le vecteur theta
+    for (k in seq(1:K)){
+      #on recupere et on compte les y dans la catégorie k
+      yk = c()
+      nk = 0
+      for (i in seq(1:n)){
+        if (z[i] == k){
+          yk = c(yk, y[i])
+          nk = nk + 1
+        }
+      }
+      t[k] = rgamma(1, nk * mean(yk), 1 / nk)
+    }
+  
+}
+
+#maintenant on estime la performance : on calcule la densité de la grande loi en pondérant les poissons
+
+#on compte la répartitions des zk :
+pk = rep(0, K)
+for (i in seq(1:n)){
+  pk[z[i]] = pk[z[i]] + 1
+}
+#on trace l'histogramme de y :
+hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,1), col="red")  # on trace l'histogramme des y normalisé à 1
+x_graph = seq(from=0, to=max(y), by=1)
+y_graph = c()
+for (v in seq(1, length(x_graph))){
+  y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
+}
+lines(x_graph, y_graph)
+
+
+```
