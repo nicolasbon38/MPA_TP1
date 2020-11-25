@@ -102,7 +102,6 @@ for (i in seq(1:nthetas)){
 
 
 
-print(length(les_thetas) - length(les_thetas_filtres))
 hist(les_thetas, breaks=50, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")  # on trace l'histogramme des thétas normalisé à 1
 x_graph = seq(from=0, to=20, by=0.1)
 y_graph = dgamma(x_graph, shape=n*mean(y), scale=1/n) #on trace la densité réelle
@@ -114,7 +113,28 @@ L'histogramme correspond. Il serait probablement plus performant avec plus de do
 
 # Partie 2
 
-Là il faut rédiger la partie théorique
+## Question 1:
+\[
+p(y|z, \theta ) = p(y_1...y_n|z, \theta ) = \prod_{i = 1}^{K}p(y_i|z, \theta )\]
+par indépendance des $y_i$.
+On obtient : 
+\[p(y|z, \theta ) = \prod_{i = 1}^{K}p(y_i|z_i, \theta )\]
+Ensuite, on regroupe par rapport aux classes $I_k$ :
+\[p(y|z, \theta ) = \prod_{k = 1}^{K}\prod_{i\in I_k}^{}p(y_i|z_i, \theta )\]
+Or d'après l'énoncé : 
+\[p(y_i|z_i, \theta ) = (\theta_{z_i})^{y_i}\frac{e^{-\theta_{z_i}}}{!y_i}\]
+On peut donc remplacer dans la formule, sachant que si $i\in I_k$ $z_i = k$.
+D'où : 
+\[p(y|z, \theta ) = \prod_{k = 1}^{K}\prod_{i\in I_k}^{}(\theta_{k})^{y_i}\frac{e^{-\theta_{k}}}{!y_i}\]
+
+
+## Question 2:
+
+\[p(z,\theta |y) \propto  p(y| z,\theta)p(\theta )p(z)\]
+Or $p(\theta) = p(\theta_1...\theta_K)$ 
+On suppose les $\theta_k$ indépendant. De plus $p(z) \propto 1$
+D'où :
+\[ p(z,\theta |y) \propto \prod_{k = 1}^{K}\frac{1}{\theta _k}\prod_{i\in I_k}^{}(\theta_{k})^{y_i}\frac{e^{-\theta_{k}}}{!y_i}\]
 
 
 
@@ -134,7 +154,7 @@ t <- runif(K, 0, max(y))
 
 #on fait tourner l'algo
 
-niter=100
+niter=1000
 for (iter in seq(1:niter)){
   #GS1 : maj de z
     #On parcourt le vecteur z
