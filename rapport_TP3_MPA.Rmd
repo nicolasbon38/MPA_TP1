@@ -136,71 +136,125 @@ On suppose les $\theta_k$ indépendant. De plus $p(z) \propto 1$
 D'où :
 \[ p(z,\theta |y) \propto \prod_{k = 1}^{K}\frac{1}{\theta _k}\prod_{i\in I_k}^{}(\theta_{k})^{y_i}\frac{e^{-\theta_{k}}}{!y_i}\]
 
+## Question 3:
+
+D'après la formule de Bayes:
+\[p(z_i|y, \theta ) = \frac{p(y|z_i, \theta )p(z_i|\theta )}{p(y|\theta )}\]
+De plus : 
+\[p(y|z_i, \theta ) = p(y_i |z_i, \theta )\prod_{j \neq i}^{}p(y_j | \theta )\]
+\[ p(y| \theta ) = p(y_i |\theta )\prod_{j \neq i}^{}p(y_j | \theta )\]
+\[p(z_i|\theta) = p(z_i) = \frac{1}{K}\]
+
+Alors : 
+\[p(z_i|y, \theta ) = \frac{p(y_i|z_i, \theta )}{p(y_i|\theta )K}\]
+
+On applique la formules des probabilités totales :
+\[p(y_i|\theta ) = \sum_{k = 1}^{K}p(y_i|z_i = k, \theta )p(zi = k)\] 
+$p(z_i = k) = K \forall i,k$ et $p(y_i|z_i, \theta ) = (\theta_{z_i})^{y_i}\frac{e^{-\theta_{z_i}}}{!y_i}$
+
+D'où : 
+\[p(z_i = k |y, \theta ) = \frac{(\theta_{k})^{y_i}\frac{e^{-\theta_{k}}}{!y_i}}{\sum_{l = 1}^{K}(\theta_{l})^{y_i}\frac{e^{-\theta_{l}}}{!y_i}}\]
+Et en simplifiant : 
+\[p(z_i = k |y, \theta ) = \frac{1}{\sum_{l = 1}^{K}(\frac {\theta_{l}}{\theta_k})^{y_i}e^{-\theta_{l} + \theta_{k}}}\]
+
+## Question 4:
+
+Comme on connait z, y $\theta_k$ ne dépend que des yi tels que $i \in I_k$ que l'on notera $y_{I_k}$.
+
+On peut donc ecrire : 
+\[ p(\theta_k |\theta _{-k}, y,z) = p(\theta_k |\theta _{-k}, y_{I_k},z)\]
+
+Alors :
+\[p(\theta_k |\theta _{-k}, y,z) \propto p(y_{I_k} |\theta,z)p(\theta_k)\]
+
+Or $p(\theta_k)=\frac {1}{\theta_k}$.
+
+D'où :
+
+\[p(\theta_k |\theta _{-k}, y,z) \propto \frac{1}{\theta _k}\prod_{i\in I_k}^{}(\theta_{k})^{y_i}\frac{e^{-\theta_{k}}}{!y_i}\]
+
+En simplifiant les termes qui ne dépendent pas de $\theta_k$ et en factorisant:
+
+\[p(\theta_k |\theta _{-k}, y,z) \propto (\theta_{k})^{\sum_{i \in I_k}^{}y_i -1}e^{-\sum_{i \in I_k}^{}\theta_{k}}\]
+
+On introduit $n_k$ et en ecrivant $\sum_{i \in I_k}^{}y_i \frac{n_k}{n_k} = n_k\bar{y_k}$:
+
+\[p(\theta_k |\theta _{-k}, y,z) \propto (\theta_{k})^{n_k\bar{y_k} -1}e^{-n_k\theta_{k}}\]
+
+
+
+
+
+
+
+
 
 
 Implémentation de l'algo de Gibbs :
 
 ```{R}
-#on commence par récupérer les données
-y <- scan('TP3_mpa_2020.txt')
-n = length(y)
+# 
+# #on commence par récupérer les données
+# y <- scan('TP3_mpa_2020.txt')
+# n = length(y)
+# 
+# #on définit le nombre de catégories
+# K = 2
+# 
+# #on initialise les vecteurs z et thetas
+# z <- floor(runif(n, 0, K))
+# t <- runif(K, 0, max(y))
+# 
+# #on fait tourner l'algo
+# 
+# niter=1000
+# for (iter in seq(1:niter)){
+#   #GS1 : maj de z
+#     #On parcourt le vecteur z
+#     for (i in seq(1:n)){
+#           #On définit la nouvelle loi de probas : vecteur de longueur K des p(z=k)
+#          i = 1
+#         probas_z = c()
+#         for (k in seq (1:K)){
+#           probas_z = c(probas_z, t[k]^y[i]*exp(-t[k]) / sum(t^y[i]*exp(-t)))
+#         }
+#         #print(probas_z)
+#         #On fait un tirage suivant cette loi
+#         z[i] = sample(1:K, 1, prob=probas_z)
+#     }
+#   #GS2 : maj de theta
+#   #on parcourt le vecteur theta
+#     for (k in seq(1:K)){
+#       #on recupere et on compte les y dans la catégorie k
+#       yk = c()
+#       nk = 0
+#       for (i in seq(1:n)){
+#         if (z[i] == k){
+#           yk = c(yk, y[i])
+#           nk = nk + 1
+#         }
+#       }
+#       t[k] = rgamma(1, nk * mean(yk), 1 / nk)
+#     }
+#   
+# }
+# 
+# #maintenant on estime la performance : on calcule la densité de la grande loi en pondérant les poissons
+# 
+# #on compte la répartitions des zk :
+# pk = rep(0, K)
+# for (i in seq(1:n)){
+#   pk[z[i]] = pk[z[i]] + 1
+# }
+# #on trace l'histogramme de y :
+# hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,1), col="red")  # on trace l'histogramme des y normalisé à 1
+# x_graph = seq(from=0, to=max(y), by=1)
+# y_graph = c()
+# for (v in seq(1, length(x_graph))){
+#   y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
+# }
+# lines(x_graph, y_graph)
 
-#on définit le nombre de catégories
-K = 2
-
-#on initialise les vecteurs z et thetas
-z <- floor(runif(n, 0, K))
-t <- runif(K, 0, max(y))
-
-#on fait tourner l'algo
-
-niter=1000
-for (iter in seq(1:niter)){
-  #GS1 : maj de z
-    #On parcourt le vecteur z
-    for (i in seq(1:n)){
-          #On définit la nouvelle loi de probas : vecteur de longueur K des p(z=k)
-         i = 1
-        probas_z = c()
-        for (k in seq (1:K)){
-          probas_z = c(probas_z, t[k]^y[i]*exp(-t[k]) / sum(t^y[i]*exp(-t)))
-        }
-        #print(probas_z)
-        #On fait un tirage suivant cette loi
-        z[i] = sample(1:K, 1, prob=probas_z)
-    }
-  #GS2 : maj de theta
-  #on parcourt le vecteur theta
-    for (k in seq(1:K)){
-      #on recupere et on compte les y dans la catégorie k
-      yk = c()
-      nk = 0
-      for (i in seq(1:n)){
-        if (z[i] == k){
-          yk = c(yk, y[i])
-          nk = nk + 1
-        }
-      }
-      t[k] = rgamma(1, nk * mean(yk), 1 / nk)
-    }
-  
-}
-
-#maintenant on estime la performance : on calcule la densité de la grande loi en pondérant les poissons
-
-#on compte la répartitions des zk :
-pk = rep(0, K)
-for (i in seq(1:n)){
-  pk[z[i]] = pk[z[i]] + 1
-}
-#on trace l'histogramme de y :
-hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,1), col="red")  # on trace l'histogramme des y normalisé à 1
-x_graph = seq(from=0, to=max(y), by=1)
-y_graph = c()
-for (v in seq(1, length(x_graph))){
-  y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
-}
-lines(x_graph, y_graph)
 
 
 ```
