@@ -193,67 +193,71 @@ On introduit $n_k$ et en ecrivant $\sum_{i \in I_k}^{}y_i \frac{n_k}{n_k} = n_k\
 Implémentation de l'algo de Gibbs :
 
 ```{R}
-# 
-# #on commence par récupérer les données
-# y <- scan('TP3_mpa_2020.txt')
-# n = length(y)
-# 
-# #on définit le nombre de catégories
-# K = 2
-# 
-# #on initialise les vecteurs z et thetas
-# z <- floor(runif(n, 0, K))
-# t <- runif(K, 0, max(y))
-# 
-# #on fait tourner l'algo
-# 
-# niter=1000
-# for (iter in seq(1:niter)){
-#   #GS1 : maj de z
-#     #On parcourt le vecteur z
-#     for (i in seq(1:n)){
-#           #On définit la nouvelle loi de probas : vecteur de longueur K des p(z=k)
-#          i = 1
-#         probas_z = c()
-#         for (k in seq (1:K)){
-#           probas_z = c(probas_z, t[k]^y[i]*exp(-t[k]) / sum(t^y[i]*exp(-t)))
-#         }
-#         #print(probas_z)
-#         #On fait un tirage suivant cette loi
-#         z[i] = sample(1:K, 1, prob=probas_z)
-#     }
-#   #GS2 : maj de theta
-#   #on parcourt le vecteur theta
-#     for (k in seq(1:K)){
-#       #on recupere et on compte les y dans la catégorie k
-#       yk = c()
-#       nk = 0
-#       for (i in seq(1:n)){
-#         if (z[i] == k){
-#           yk = c(yk, y[i])
-#           nk = nk + 1
-#         }
-#       }
-#       t[k] = rgamma(1, nk * mean(yk), 1 / nk)
-#     }
-#   
-# }
-# 
-# #maintenant on estime la performance : on calcule la densité de la grande loi en pondérant les poissons
-# 
-# #on compte la répartitions des zk :
-# pk = rep(0, K)
-# for (i in seq(1:n)){
-#   pk[z[i]] = pk[z[i]] + 1
-# }
-# #on trace l'histogramme de y :
-# hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,1), col="red")  # on trace l'histogramme des y normalisé à 1
-# x_graph = seq(from=0, to=max(y), by=1)
-# y_graph = c()
-# for (v in seq(1, length(x_graph))){
-#   y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
-# }
-# lines(x_graph, y_graph)
+
+#on commence par récupérer les données
+#y <- scan('TP3_mpa_2020.txt')
+theta1 = 80
+theta2 = 100
+y = c(rpois(100, theta1), rpois(200, theta2))
+n = length(y)
+
+#on définit le nombre de catégories
+K = 3
+
+#on initialise les vecteurs z et thetas
+z <- floor(runif(n, 1, K+1)) # il n'y a que deux catégories alors les valeur seront 1 et 2
+t <- runif(K, 0, max(y)) #theta init entre 0 et max y
+t
+#on fait tourner l'algo
+
+niter=1000
+for (iter in seq(1:niter)){
+  #GS1 : maj de z
+    #On parcourt le vecteur z
+    for (i in seq(1:n)){
+          #On définit la nouvelle loi de probas : vecteur de longueur K des p(z=k)
+        probas_z = c()
+        for (k in seq (1:K)){
+          new =  sum((t/t[k])^y[i]*exp(-t + t[k]))
+          probas_z = c(probas_z, 1 /new)
+        }
+        #print(probas_z)
+        #On fait un tirage suivant cette loi
+        
+        z[i] = sample(1:K, 1, prob=probas_z)
+    }
+  #GS2 : maj de theta
+  #on parcourt le vecteur theta
+    for (k in seq(1:K)){
+      #on recupere et on compte les y dans la catégorie k
+      yk = c()
+      nk = 0
+      for (i in seq(1:n)){
+        if (z[i] == k){
+          yk = c(yk, y[i])
+          nk = nk + 1
+        }
+      }
+      t[k] = rgamma(1, nk * mean(yk), nk)
+    }
+}
+
+print(t)
+#maintenant on estime la performance : on calcule la densité de la grande loi en pondérant les poissons
+
+#on compte la répartitions des zk :
+pk = rep(0, K)
+for (i in seq(1:n)){
+  pk[z[i]] = pk[z[i]] + 1
+}
+#on trace l'histogramme de y :
+hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,1), col="red")  # on trace l'histogramme des y normalisé à 1
+x_graph = seq(from=0, to=max(y), by=1)
+y_graph = c()
+for (v in seq(1, length(x_graph))){
+  y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
+}
+lines(x_graph, y_graph)
 
 
 
