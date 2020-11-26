@@ -14,7 +14,7 @@ La loi générative s'exprime sous la forme :
 p(y|\theta) = \prod_{i=1}^{n} p(y_i|\theta) = \prod_{i=1}^n e^{-\theta} \times \frac{\theta^{y_i}}{y_i!} = e^{-n\theta} \times \frac{\theta^{\sum_{i=1}^n y_i}}{\prod_{i=1}^n y_i!} = e^{-n\theta} \times \frac{\theta^{n\overline{y}}}{\prod_{i=1}^ny_i!}
 \]
 
-##Question 2
+## Question 2
 
 Pour déterminer la loi a posteriori, on utilise la formule de Bayes :
 
@@ -51,11 +51,11 @@ En réutilisant le calcul de la constante, on aboutit à :
 \]
 
 
-
+## Question 3
 
 ```{R}
 theta.reel = 11
-n = 30 #taille du tirage, ne peut pas être beaucoup plus grand sinon on risque d'overflow dans le calcul de r
+n = 30#taille du tirage, ne peut pas être beaucoup plus grand sinon on risque d'overflow dans le calcul de r
 y = rpois(n, theta.reel)
 
 #on fait un tirage de thetas avec l'algorithme de Metropolis-Hastings
@@ -65,8 +65,7 @@ for (i in seq(1:nthetas)){
   #Metropolis-Hastings
   
   #Etape 1 : initialisation
-  niter = 1000
-  t = 0
+  niter = 100
   theta.t = 11
 
   for (k in seq(1:niter)){
@@ -99,16 +98,89 @@ for (i in seq(1:nthetas)){
   }
   les_thetas = c(les_thetas, theta.t)
 }
+```
+
+## Question 4 
+On obtient la moyenne, la médiane et l'intervalle de confaince par les commandes suivantes
+
+```{R}
+value = les_thetas
+summary(value)
+t.test(value)
+
+```
 
 
-
-hist(les_thetas, breaks=50, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")  # on trace l'histogramme des thétas normalisé à 1
+## Question 5 
+On trace l'histogramme des theta obtenus à la qu 3, en superposant la loi trouvée à la question 2.
+```{R}
+hist(les_thetas, breaks=20, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="green")  # on trace l'histogramme des thétas normalisé à 1
 x_graph = seq(from=0, to=20, by=0.1)
-y_graph = dgamma(x_graph, shape=n*mean(y), scale=1/n) #on trace la densité réelle
-lines(x_graph, y_graph) #on superpose les deux graphes
+y_graph = dgamma(x_graph, shape=n*mean(y), scale= 1/n) #on trace la densité réelle
+lines(x_graph, y_graph, col = "red") #on superpose les deux graphes
 
 ```
 L'histogramme correspond. Il serait probablement plus performant avec plus de données, mais cela donnerait des valeurs trop grandes pour êtres calculées par R
+
+## Question 6
+
+\[p(\tilde{y}|y) = p(\tilde{y}|\theta) = e^{-\theta} \times \frac{\theta^{\tilde{y}}}{\tilde{y}!}\]
+On reprend donc le même procédé qu'a la question deux, en choisissant le $\theta$ le plus probable qui correspond ici à la moyenne ie environ 11.
+
+```{R}
+theta = 11
+n = 30 #taille du tirage, ne peut pas être beaucoup plus grand sinon on risque d'overflow dans le calcul de r
+
+#on fait un tirage de thetas avec l'algorithme de Metropolis-Hastings
+ny = 100
+les_y = c()
+for (i in seq(1:ny)){
+  #Metropolis-Hastings
+  
+  #Etape 1 : initialisation
+  niter = 100
+  y.t = 11
+
+  for (k in seq(1:niter)){
+    #Etape 2
+    y.star = rexp(1, rate=1/y.t)
+    #Etape 3
+    if (1 != Inf){
+      r = (theta)^(y.star - y.t) * (factorial(y.t)/factorial(y.star))* dexp(y.t, rate=1/y.star) / dexp(y.star, rate=1/y.t)
+     # print(r)
+      if (is.nan(r)){
+        next
+      }
+        #etape 4
+      if (1 < r){
+        p = 1
+      }
+      else{
+        p = r
+      }
+    }
+    else{
+      p = 1
+      
+    }
+    tirage = runif(1)
+    if (tirage < p){
+      y.t = y.star
+    }
+    #etape 5 done
+  }
+  les_y = c(les_y, y.t)
+}
+
+hist(les_y, breaks=20, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="green")  # on trace l'histogramme des thétas normalisé à 1
+x_graph = seq(from=0, to=20, by=1)
+y_graph = dpois(x_graph, lambda = theta) #on trace la densité réelle
+lines(x_graph, y_graph, col = "red") #on su
+
+hist(y, breaks=20, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")
+
+```
+Il est difficle de comparé les valeurs calculées aux valeurs de départ car il y a peu de valeurs de départs (à cause de la capacité de calculs limitées)
 
 
 # Partie 2
@@ -206,7 +278,8 @@ K = 3
 
 #on initialise les vecteurs z et thetas
 z <- floor(runif(n, 1, K+1)) # il n'y a que deux catégories alors les valeur seront 1 et 2
-t <- runif(K, 0, max(y)) #theta init entre 0 et max y
+#t <- runif(K, 0, max(y)) #theta init entre 0 et max y
+t<- rep(mean(y), K)
 t
 #on fait tourner l'algo
 
