@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "rapport_TP3_MPA"
 author: "BON, BARON, FOUSSE"
@@ -111,6 +112,7 @@ t.test(value)
 ```
 
 
+
 ## Question 5 
 On trace l'histogramme des theta obtenus à la qu 3, en superposant la loi trouvée à la question 2.
 ```{R}
@@ -125,7 +127,7 @@ L'histogramme correspond. Il serait probablement plus performant avec plus de do
 ## Question 6
 
 \[p(\tilde{y}|y) = p(\tilde{y}|\theta) = e^{-\theta} \times \frac{\theta^{\tilde{y}}}{\tilde{y}!}\]
-On reprend donc le même procédé qu'a la question deux, en choisissant le $\theta$ le plus probable qui correspond ici à la moyenne ie environ 11.
+On reprend donc le même procédé qu'a la question deux, en choisissant le $\theta$ le plus probable qui correspond ici à la moyenne.
 
 ```{R}
 theta = 11
@@ -180,7 +182,9 @@ lines(x_graph, y_graph, col = "red") #on su
 hist(y, breaks=20, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")
 
 ```
-Il est difficle de comparé les valeurs calculées aux valeurs de départ car il y a peu de valeurs de départs (à cause de la capacité de calculs limitées)
+Il est difficle de comparer les valeurs calculées aux valeurs de départ car il y a peu de valeurs de départs (à cause de la capacité de calculs limitées). Cependant, on peut comparer l'histogramme des y calculés avec la densité théorique. Les y calculés sont legèrement decalés par rapport à la densité theorique (à cause de l'incertitude du paramètre $\theta$) mais ont tout de même la même forme.
+
+
 
 
 # Partie 2
@@ -345,7 +349,7 @@ On applique l'algorithe sur les données de l'énoncé :
 ```{R}
 
 
-Gibbs.a.K.classes <- function(K){
+Gibbs.a.K.classes <- function(K, printgraphs){
   #on commence par récupérer les données
   y <- scan('TP3_mpa_2020.txt')
   
@@ -396,7 +400,6 @@ Gibbs.a.K.classes <- function(K){
       }
   }
   
-  print(t)
   #maintenant on estime la performance : on calcule la densité de la grande loi en pondérant les poissons
   
   #on compte la répartitions des zk :
@@ -405,23 +408,26 @@ Gibbs.a.K.classes <- function(K){
     pk[z[i]] = pk[z[i]] + 1
   }
   pk = pk/length(z)
-  #on trace l'histogramme de y :
-  hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,0.2), col="red")  # on trace l'histogramme des y normalisé à 1
-  x_graph = seq(from=0, to=max(y), by=1)
-  y_graph = c()
-  for (v in seq(1, length(x_graph))){
-    y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
+  if (printgraphs){
+    #on trace l'histogramme de y :
+    hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,0.2), col="red")  # on trace l'histogramme des y normalisé à 1
+    x_graph = seq(from=0, to=max(y), by=1)
+    y_graph = c()
+    for (v in seq(1, length(x_graph))){
+      y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
+    }
+    lines(x_graph, y_graph)
+    colors=c("blue", "red", "yellow", "green", "pink")
+    barplot(matrice.probas_z, beside=FALSE, horiz=FALSE, xlim=c(0, 210), ylim=c(0, 3), col=  colors[1:K], main="proba d'appartenir à chaque classe pour chaque valeur")
   }
-  lines(x_graph, y_graph)
-  colors=c("blue", "red", "yellow", "green", "pink")
-  barplot(matrice.probas_z, beside=FALSE, horiz=FALSE, xlim=c(0, 210), ylim=c(0, 3), col=  colors[1:K], main="proba d'appartenir à chaque classe pour chaque valeur")
+  return(list(pk, t))
 }
 
-
-Gibbs.a.K.classes(2)
-Gibbs.a.K.classes(3)
-Gibbs.a.K.classes(4)
-Gibbs.a.K.classes(5)
+# 
+Gibbs.a.K.classes(2, TRUE)
+Gibbs.a.K.classes(3, TRUE)
+Gibbs.a.K.classes(4, TRUE)
+Gibbs.a.K.classes(5, TRUE)
 
 ```
 
@@ -430,4 +436,50 @@ La densité obtenue avec 2 classes ne correspond pas du tout à l'histogramme, o
 Pour 4 classes, on voit que la classe bleue et la classe jaune ne sont pas vraiment discriminées par l'algorithme. Pour 5 classes ce sont les classes bleue, rouge et jaune qui ne sont pas détectées.
 
 Ainsi le modèle à trois classes paraît être le plus adapté pour décrire les données.
+
+On  peut le vérifier en tirant un nouveau set de données $\tilde{y}$ avec la loi ainsi déterminée, et en étudiant différents paramètres statistiues tels que la skewness et la kurtosis.
+
+```{R}
+#on récupère les pk et les t
+for (K in seq(from=2, to=5, by=1)){
+  a = Gibbs.a.K.classes(K, FALSE)
+  pk = a[1]
+  t = a[2]
+  t = unlist(t)
+  
+  #on tire 200 nouveau y :
+  y.tilde = c()
+  for (i in seq(1:500)){
+    idx.poisson = sample(1:K, 1, prob=unlist(pk))
+    y.tilde = c(y.tilde, rpois(1, t[idx.poisson]))
+  }
+  
+  #on compare les skewness :
+  library(moments)
+  y <- scan('TP3_mpa_2020.txt')
+  print(K)
+  print(skewness(y.tilde))
+  
+  
+  print(skewness(y))
+
+  print(kurtosis(y))
+  print(kurtosis(y.tilde))
+}
+
+```
+
+On voit dans ce calcul que les paramètres statistiques collent mieux à la modélisation par 3, 4 et 5 classes.
+
+
+Mais, on voit sur les diagrammes en barres que les modélisations à 4 et 5 classes ne sont pas adaptées comme on l'a vu dans le paragraphe précédent.
+
+Ainsi, on gardera la modélisation à 3 classes, avec :
+
+$\theta_1 = 2.57 et p_1 = 0.24$
+$\theta_2 = 10.86 et p_2 = 0.47$
+$\theta_3 = 19.3 et p_3 = 0.28$
+
+
+
 
