@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ---
 title: "rapport_TP3_MPA"
 author: "BON, BARON, FOUSSE"
@@ -52,6 +53,8 @@ En réutilisant le calcul de la constante, on aboutit à :
 
 
 ## Question 3
+
+Voici l'implémentation de l'algorithme de Metropolis-Hasting :
 
 ```{R}
 theta.reel = 11
@@ -109,7 +112,7 @@ summary(value)
 t.test(value)
 
 ```
-
+On voit que la moyenne et la medianne sont proches de la valeur obtenue, c'est ce qu'on attendait.
 
 ## Question 5 
 On trace l'histogramme des theta obtenus à la qu 3, en superposant la loi trouvée à la question 2.
@@ -125,7 +128,7 @@ L'histogramme correspond. Il serait probablement plus performant avec plus de do
 ## Question 6
 
 \[p(\tilde{y}|y) = p(\tilde{y}|\theta) = e^{-\theta} \times \frac{\theta^{\tilde{y}}}{\tilde{y}!}\]
-On reprend donc le même procédé qu'a la question deux, en choisissant le $\theta$ le plus probable qui correspond ici à la moyenne ie environ 11.
+On reprend donc le même procédé qu'a la question deux, en choisissant le $\theta$ le plus probable qui correspond ici à la moyenne.
 
 ```{R}
 theta = 11
@@ -180,7 +183,7 @@ lines(x_graph, y_graph, col = "red") #on su
 hist(y, breaks=20, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="red")
 
 ```
-Il est difficle de comparé les valeurs calculées aux valeurs de départ car il y a peu de valeurs de départs (à cause de la capacité de calculs limitées)
+Il est difficle de comparer les valeurs calculées aux valeurs de départ car il y a peu de valeurs de départs (à cause de la capacité de calculs limitées). Cependant, on peut comparer l'histogramme des y calculés avec la densité théorique. Les y calculés sont legèrement decalés par rapport à la densité theorique (à cause de l'incertitude du paramètre $\theta$) mais ont tout de même la même forme.
 
 
 # Partie 2
