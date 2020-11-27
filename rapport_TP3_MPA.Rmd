@@ -172,7 +172,7 @@ for (i in seq(1:ny)){
   les_y = c(les_y, y.t)
 }
 
-hist(les_y, breaks=20, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="green")  # on trace l'histogramme des thétas normalisé à 1
+hist(les_y, breaks=20, prob=T, main=NULL, xlim=c(0, 30), ylim = c(0,1), col="green")  # on trace l'histogramme des y normalisé à 1
 x_graph = seq(from=0, to=20, by=1)
 y_graph = dpois(x_graph, lambda = theta) #on trace la densité réelle
 lines(x_graph, y_graph, col = "red") #on su
@@ -256,19 +256,16 @@ On introduit $n_k$ et en ecrivant $\sum_{i \in I_k}^{}y_i \frac{n_k}{n_k} = n_k\
 
 
 
+## Question 5 
 
 
-
-
-
-
-Implémentation de l'algo de Gibbs :
+Implémentation de l'algo de Gibbs, et test avec $K = 2$, $\theta_1 =  20$, $\theta_2 = 100$, $p_1 = \frac{1}{3}$, $p_2 = \frac{2}{3}$:
 
 ```{R}
 
 #on commence par récupérer les données
 #y <- scan('TP3_mpa_2020.txt')
-theta1 = 80
+theta1 = 20
 theta2 = 100
 y = c(rpois(100, theta1), rpois(200, theta2))
 n = length(y)
@@ -323,8 +320,9 @@ pk = rep(0, K)
 for (i in seq(1:n)){
   pk[z[i]] = pk[z[i]] + 1
 }
+pk = pk/length(z)
 #on trace l'histogramme de y :
-hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,1), col="red")  # on trace l'histogramme des y normalisé à 1
+hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,0.2), col="red")  # on trace l'histogramme des y normalisé à 1
 x_graph = seq(from=0, to=max(y), by=1)
 y_graph = c()
 for (v in seq(1, length(x_graph))){
@@ -335,3 +333,96 @@ lines(x_graph, y_graph)
 
 
 ```
+
+L'algorithme est assez performant.
+On peut obtenir $\mathbb{E}(\theta_k|y)$ en prenant les velaurs moyennes de chaque classe, et on retrouve les $p_k$ en étudiant la fréquence de chaque $z_k$ dans le vecteur $z$.
+
+## Question 7
+
+On applique l'algorithe sur les données de l'énoncé :
+
+
+```{R}
+
+
+Gibbs.a.K.classes <- function(K){
+  #on commence par récupérer les données
+  y <- scan('TP3_mpa_2020.txt')
+  
+  n = length(y)
+  
+   #on contruit le barplot stylé du cours avec une matrix
+  matrice.probas_z = matrix(nrow=length(y), ncol=K)
+  
+  #on définit le nombre de catégories
+  
+  #on initialise les vecteurs z et thetas
+  z <- floor(runif(n, 1, K+1)) # il n'y a que deux catégories alors les valeur seront 1 et 2
+  #t <- runif(K, 0, max(y)) #theta init entre 0 et max y
+  t<- rep(mean(y), K)
+  t
+  #on fait tourner l'algo
+  
+  niter=1000
+  for (iter in seq(1:niter)){
+    #GS1 : maj de z
+      #On parcourt le vecteur z
+      for (i in seq(1:n)){
+            #On définit la nouvelle loi de probas : vecteur de longueur K des p(z=k)
+          probas_z = c()
+          for (k in seq (1:K)){
+            new =  sum((t/t[k])^y[i]*exp(-t + t[k]))
+            probas_z = c(probas_z, 1 /new)
+            matrice.probas_z[i, k] = 1/new
+          }
+          #print(probas_z)
+          #On fait un tirage suivant cette loi
+          
+          z[i] = sample(1:K, 1, prob=probas_z)
+      }
+    #GS2 : maj de theta
+    #on parcourt le vecteur theta
+      for (k in seq(1:K)){
+        #on recupere et on compte les y dans la catégorie k
+        yk = c()
+        nk = 0
+        for (i in seq(1:n)){
+          if (z[i] == k){
+            yk = c(yk, y[i])
+            nk = nk + 1
+          }
+        }
+        t[k] = rgamma(1, nk * mean(yk), nk)
+      }
+  }
+  
+  print(t)
+  #maintenant on estime la performance : on calcule la densité de la grande loi en pondérant les poissons
+  
+  #on compte la répartitions des zk :
+  pk = rep(0, K)
+  for (i in seq(1:n)){
+    pk[z[i]] = pk[z[i]] + 1
+  }
+  pk = pk/length(z)
+  #on trace l'histogramme de y :
+  hist(y, breaks=50, prob=T, main=NULL, xlim=c(0, max(y)), ylim = c(0,0.2), col="red")  # on trace l'histogramme des y normalisé à 1
+  x_graph = seq(from=0, to=max(y), by=1)
+  y_graph = c()
+  for (v in seq(1, length(x_graph))){
+    y_graph = c(y_graph, sum(pk * dpois(x_graph[v], t)))
+  }
+  lines(x_graph, y_graph)
+  print(matrice.probas_z)
+  barplot(matrice.probas_z, beside=FALSE, horiz=FALSE, col=c("blue", "green", "red"), xlim=c(0, 210))
+}
+
+
+#Gibbs.a.K.classes(2)
+ Gibbs.a.K.classes(3)
+# Gibbs.a.K.classes(4)
+# Gibbs.a.K.classes(5)
+
+```
+
+La simulation à 3 classes paraît être la plus adaptée.
