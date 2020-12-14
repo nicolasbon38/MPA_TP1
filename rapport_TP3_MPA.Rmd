@@ -74,7 +74,7 @@ for (i in seq(1:nthetas)){
     theta.star = rexp(1, rate=1/theta.t)
     #Etape 3
     if ((theta.star / theta.t)^(n*mean(y) - 1) != Inf){
-      r = exp(-n * (theta.star - theta.t)) * (theta.star / theta.t)^(n*mean(y) - 1) * dexp(theta.t, rate=1/theta.star) / dexp(theta.star, rate=1/theta.t)
+      r = exp(-n * (theta.star - theta.t)) * (theta.star / theta.t)^(n*mean(y) - 1) * dexp(theta.star, rate=1/theta.t) / dexp(theta.t, rate=1/theta.star)
      # print(r)
       if (is.nan(r)){
         next
